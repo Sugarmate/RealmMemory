@@ -131,7 +131,7 @@ class ViewController: UIViewController {
     fileprivate func startObserving() {
         let realm = try! Realm()
         let objects = realm.objects(RealmObj.self)
-        token = objects.observe({ changes in
+        token = objects.observe(keyPaths: ["started_at", "title"], on: .main) { changes in
             switch changes {
             case .initial(_):
                 print("Observe: initial")
@@ -140,7 +140,7 @@ class ViewController: UIViewController {
             case .error(let error):
                 print("Observe: error: \(error)")
             }
-        })
+        }
     }
 
     fileprivate func stopObserving() {
