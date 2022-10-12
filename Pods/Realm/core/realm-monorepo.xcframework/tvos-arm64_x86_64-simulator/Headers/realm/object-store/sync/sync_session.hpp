@@ -138,18 +138,6 @@ public:
     void wait_for_download_completion(util::UniqueFunction<void(std::error_code)>&& callback)
         REQUIRES(!m_state_mutex);
 
-    // Block until upload completion occurs. Prefer the async version of this
-    // which takes a callback outside of test code.
-    // Returns true if upload completion actually occurred, and false if the
-    // session does not exist or the client was stopped.
-    bool wait_for_upload_completion() REQUIRES(!m_state_mutex);
-
-    // Block until download completion occurs. Prefer the async version of this
-    // which takes a callback outside of test code.
-    // Returns true if download completion actually occurred, and false if the
-    // session does not exist or the client was stopped.
-    bool wait_for_download_completion() REQUIRES(!m_state_mutex);
-
     // Register a notifier that updates the app regarding progress.
     //
     // If `m_current_progress` is populated when this method is called, the notifier
@@ -202,6 +190,9 @@ public:
     // Shut down the synchronization session (sync::Session) and wait for the Realm file to no
     // longer be open on behalf of it.
     void shutdown_and_wait() REQUIRES(!m_state_mutex, !m_connection_state_mutex);
+
+    // DO NOT CALL OUTSIDE OF TESTING CODE.
+    void detach_from_sync_manager() REQUIRES(!m_state_mutex, !m_connection_state_mutex);
 
     // The access token needs to periodically be refreshed and this is how to
     // let the sync session know to update it's internal copy.
@@ -285,6 +276,11 @@ public:
         {
             return session.m_db;
         }
+
+        static util::Future<std::string> send_test_command(SyncSession& session, std::string request)
+        {
+            return session.send_test_command(std::move(request));
+        }
     };
 
 private:
@@ -356,7 +352,6 @@ private:
     void create_sync_session() REQUIRES(m_state_mutex, !m_config_mutex);
     void did_drop_external_reference()
         REQUIRES(!m_state_mutex, !m_config_mutex, !m_external_reference_mutex, !m_connection_state_mutex);
-    void detach_from_sync_manager() REQUIRES(!m_state_mutex, !m_connection_state_mutex);
     void close(util::CheckedUniqueLock) RELEASE(m_state_mutex) REQUIRES(!m_config_mutex, !m_connection_state_mutex);
 
     void become_active() REQUIRES(m_state_mutex, !m_config_mutex);
@@ -367,6 +362,8 @@ private:
 
     void add_completion_callback(util::UniqueFunction<void(std::error_code)> callback, ProgressDirection direction)
         REQUIRES(m_state_mutex);
+
+    util::Future<std::string> send_test_command(std::string body) REQUIRES(!m_state_mutex);
 
     util::UniqueFunction<TransactionCallback> m_sync_transact_callback GUARDED_BY(m_state_mutex);
 

@@ -1332,6 +1332,14 @@ RLM_API bool realm_get_property_keys(const realm_t*, realm_class_key_t key, real
                                      size_t max, size_t* out_n);
 
 /**
+ * Get the value for the property at the specified index in the object's schema.
+ * @param prop_index The index of the property in the class properties array the realm was opened with.
+ * @return True if no exception occurred.
+ */
+RLM_API bool realm_get_value_by_property_index(const realm_object_t* object, size_t prop_index,
+                                               realm_value_t* out_value);
+
+/**
  * Find a property by its column key.
  *
  * It is an error to pass a property @a key that is not present in this class.
@@ -2382,6 +2390,13 @@ RLM_API realm_results_t* realm_set_to_results(realm_set_t*);
 RLM_API realm_results_t* realm_dictionary_to_results(realm_dictionary_t*);
 
 /**
+ * Fetch the backlinks for the object passed as argument.
+ * @return a valid ptr to realm results that contains all the backlinks for the object, or null in case of errors.
+ */
+RLM_API realm_results_t* realm_get_backlinks(realm_object_t* object, realm_class_key_t source_table_key,
+                                             realm_property_key_t property_key);
+
+/**
  * Delete all objects matched by a query.
  */
 RLM_API bool realm_query_delete_all(const realm_query_t*);
@@ -2450,6 +2465,15 @@ RLM_API realm_results_t* realm_results_limit(realm_results_t* results, size_t ma
 RLM_API bool realm_results_get(realm_results_t*, size_t index, realm_value_t* out_value);
 
 /**
+ * Find the index for the value passed as parameter inside realm results pointer passed a input parameter.
+ *  @param value the value to find inside the realm results
+ *  @param out_index the index where the object has been found, or realm::not_found
+ *  @param out_found boolean indicating if the value has been found or not
+ *  @return true if no error occured, false otherwise
+ */
+RLM_API bool realm_results_find(realm_results_t*, realm_value_t* value, size_t* out_index, bool* out_found);
+
+/**
  * Get the matching object at @a index in the results.
  *
  * If the result is "live" (not a snapshot), this may rerun the query if things
@@ -2465,6 +2489,15 @@ RLM_API bool realm_results_get(realm_results_t*, size_t index, realm_value_t* ou
  * @return An instance of `realm_object_t` if no exception occurred.
  */
 RLM_API realm_object_t* realm_results_get_object(realm_results_t*, size_t index);
+
+/**
+ * Find the index for the realm object passed as parameter inside realm results pointer passed a input parameter.
+ *  @param value the value to find inside the realm results
+ *  @param out_index the index where the object has been found, or realm::not_found
+ *  @param out_found boolean indicating if the value has been found or not
+ *  @return true if no error occured, false otherwise
+ */
+RLM_API bool realm_results_find_object(realm_results_t*, realm_object_t* value, size_t* out_index, bool* out_found);
 
 /**
  * Delete all objects in the result.
