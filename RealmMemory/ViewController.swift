@@ -83,8 +83,8 @@ class ViewController: UIViewController {
 
         let avg = (end - start) / Double(queryCount)
         let roundedAvg = Double(Int64(avg * 100000)) / 100000
-        let avgRowCount = Double(Int64((Double(totalCount) / Double(queryCount))) * 10) / 10
-        print("Avg query time: \(roundedAvg), avg row count: \(avgRowCount) " + (sender.tag == queryByAccountIdTag ? " using accountId" : " not using accountId"))
+        let avgRowCount = Int64(Double(Int64((Double(totalCount) / Double(queryCount))) * 10) / 10)
+        print("Avg query time: \(roundedAvg), avg row count: \(avgRowCount), " + (sender.tag == queryByAccountIdTag ? " using accountId" : " not using accountId"))
         sender.isEnabled = true
     }
 
@@ -115,14 +115,13 @@ class ViewController: UIViewController {
 
     fileprivate func configureRealm() {
         var config = Realm.Configuration(deleteRealmIfMigrationNeeded: true)
-        let realmURL = FileManager.default.temporaryDirectory.appendingPathComponent("RealmMemory")
-        print("RR", realmURL)
+        let realmURL = FileManager.default.temporaryDirectory.appendingPathComponent("RealmMemory.realm")
         config.fileURL = realmURL
         Realm.Configuration.defaultConfiguration = config
 
         do {
             _ = try Realm()
-            print("Realm configured")
+            print("Realm configured: \(realmURL)")
         } catch let error {
             print("Realm config failed: " + error.localizedDescription)
             fatalError()
@@ -158,7 +157,6 @@ class ViewController: UIViewController {
         }
         try! realm.commitWrite()
 
-        loadDataButton.setTitle("Loaded", for: [])
         print("Data loaded: ", Date().timeIntervalSince(t))
     }
 
