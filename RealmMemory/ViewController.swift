@@ -12,7 +12,7 @@ class ViewController: UIViewController {
 
     var refDate = Date()
     var loadDataButton: UIButton!
-    let mockAccountId: Int = 2
+    var mockAccountId: Int = 2
     let queryByAccountIdTag: Int = 99
 
     override func viewDidLoad() {
@@ -116,8 +116,10 @@ class ViewController: UIViewController {
     fileprivate func configureRealm() {
         var config = Realm.Configuration(deleteRealmIfMigrationNeeded: true)
         let realmURL = FileManager.default.temporaryDirectory.appendingPathComponent("RealmMemory")
+        print("RR", realmURL)
         config.fileURL = realmURL
         Realm.Configuration.defaultConfiguration = config
+
         do {
             _ = try Realm()
             print("Realm configured")
@@ -132,29 +134,32 @@ class ViewController: UIViewController {
         var theStuff: [Date] = []
 
         let objects = useAccountId ? realm.objects(RealmObj.self).where {($0.ended_at >= startedAt && $0.started_at <= endedAt) && ($0.account_id == mockAccountId)} : realm.objects(RealmObj.self).where {($0.ended_at >= startedAt && $0.started_at <= endedAt)}
-        if let _ = objects.first {
-            objects.forEach { obj in
-                theStuff.append(obj.started_at)
-            }
+
+        for obj in objects {
+            theStuff.append(obj.started_at)
         }
+
         return theStuff
     }
 
     fileprivate func loadRealmData() {
         let realm = try! Realm()
         loadDataButton.setTitle("Loading...", for: [])
+
+        mockAccountId += 1
+
+        let t = Date()
+
+        realm.beginWrite()
         for i in (0...20000) {
-            if i % 500 == 0 {
-                print("loading... \(i)")
-            }
             let obj = RealmObj(started_at: refDate.addingTimeInterval(Double(i * 200)), ended_at: refDate.addingTimeInterval(Double(i * 200) + 10), account_id: mockAccountId)
-            try! realm.write {
-                realm.add(obj)
-            }
+
+            realm.add(obj)
         }
+        try! realm.commitWrite()
 
         loadDataButton.setTitle("Loaded", for: [])
-        print("Data loaded")
+        print("Data loaded: ", Date().timeIntervalSince(t))
     }
 
     fileprivate func deleteRealmData() {
@@ -190,9 +195,9 @@ class ViewController: UIViewController {
 
 class RealmObj: Object {
     @Persisted var id: String = ""
-    @Persisted(indexed: true) var started_at: Date = Date()
-    @Persisted(indexed: true) var ended_at: Date = Date()
-    @Persisted(indexed: true) var account_id: Int = 0
+    @Persisted var started_at: Date = Date()
+    @Persisted var ended_at: Date = Date()
+    @Persisted var account_id: Int = 0
     @Persisted var title: String = ""
     @Persisted var embedded: Embedded?
 
